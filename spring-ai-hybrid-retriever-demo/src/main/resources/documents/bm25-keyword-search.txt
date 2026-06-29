@@ -1,0 +1,19 @@
+BM25 is a probabilistic ranking function used in information retrieval. It improves
+on the classic TF-IDF formula by adding document length normalisation and a term
+frequency saturation factor that prevents high-frequency terms from dominating
+the score disproportionately.
+
+The BM25 score for a query term t in document d is computed as:
+  score = IDF(t) * tf * (k1 + 1) / (tf + k1 * (1 - b + b * |d| / avgdl))
+where k1 controls term frequency saturation and b controls length normalisation.
+
+Lucene has used BM25 as its default similarity since version 8, replacing the
+earlier TF-IDF implementation. The StandardAnalyzer tokenises input, lowercases
+terms, and removes stop words before building the inverted index. At query time,
+the inverted index maps each term to the list of documents containing it, allowing
+fast BM25-ranked retrieval without scanning every document.
+
+Elasticsearch and OpenSearch also default to BM25 over an inverted index. Keyword
+search with BM25 excels at exact term matching, rare technical terms, and product
+codes — cases where semantic similarity models often fail because the terms are
+absent from training data.

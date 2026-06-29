@@ -1,0 +1,17 @@
+Spring AI is a portable, extensible framework for building AI-powered applications
+in Java. It provides uniform abstractions over major AI providers including OpenAI,
+Azure OpenAI, Anthropic, and others, so application code is not coupled to a
+specific vendor.
+
+The library ships core components for embedding models, vector stores, chat models,
+and retrieval-augmented generation. The VectorStoreDocumentRetriever wraps any
+VectorStore implementation and exposes it as a standard DocumentRetriever, making
+it composable in modular RAG pipelines.
+
+Spring AI's SimpleVectorStore keeps embeddings in memory and performs cosine
+similarity search. For production use, it can be replaced by any supported vector
+store — pgvector, Qdrant, Weaviate, Chroma — without changing application code.
+
+The embedding model produces dense vector representations of text. Spring AI ships
+a TransformersEmbeddingModel backed by ONNX Runtime that runs locally without an
+API key, making it suitable for offline development and testing.

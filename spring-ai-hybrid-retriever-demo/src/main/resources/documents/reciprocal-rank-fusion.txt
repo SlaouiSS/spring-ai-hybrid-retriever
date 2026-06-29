@@ -1,0 +1,22 @@
+Reciprocal Rank Fusion (RRF) was introduced by Cormack, Clarke, and Buettcher
+in 2009 as a simple, parameter-light method for combining ranked lists from
+heterogeneous retrieval systems. The score for a document d is:
+
+  RRF(d) = Σ  1 / (k + rank(d, list))
+          lists
+
+where rank is 1-based and k is a smoothing constant, defaulting to 60. Documents
+not appearing in a given list contribute nothing to the sum for that list.
+
+RRF operates on ranks, not on raw scores. This makes it robust to the fact that
+cosine similarity scores and BM25 scores live on completely different scales. No
+normalisation, calibration, or tuning is required before fusion.
+
+A document that appears at rank 1 in both the dense and sparse lists scores
+2 / (k + 1) ≈ 0.0328 for k = 60 — exactly double the score of a document that
+appears at rank 1 in only one list. This doubling effect is the formal expression
+of the fusion value: overlap between retrieval signals is rewarded.
+
+Disjoint lists — where no document appears in both — produce a simple interleaving
+of results with no true fusion. The RRF score degrades gracefully to a weighted
+interleave in this case, still better than discarding one list entirely.

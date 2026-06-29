@@ -1,0 +1,22 @@
+Large language models process input within a finite context window measured in
+tokens. Inserting too many retrieved documents exhausts the token budget and can
+degrade generation quality as the model struggles to attend to all the content
+uniformly.
+
+Document chunking splits long texts into smaller segments before indexing. The
+optimal chunk size depends on the embedding model's maximum sequence length and
+the granularity of information the retrieval step must resolve. Chunks that are
+too small lose surrounding context; chunks that are too large dilute the relevant
+signal and increase the chance of a low-relevance passage dominating the chunk's
+embedding.
+
+Overlap between consecutive chunks — repeating the last N tokens of a chunk at
+the start of the next — reduces the risk of splitting a sentence or concept that
+spans a chunk boundary.
+
+Cross-encoder reranking can further improve precision after the initial retrieval
+step. A reranker reads the query and each candidate passage jointly and produces
+a relevance score, unlike bi-encoder embedding models that encode query and
+passage independently. Reranking is computationally heavier but more accurate;
+applying it to the top-20 candidates before feeding the top-5 to the context
+window is a common production pattern.

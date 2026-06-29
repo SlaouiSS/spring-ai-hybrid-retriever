@@ -1,0 +1,18 @@
+BM25 extends TF-IDF with two saturation mechanisms. The term frequency component
+uses the formula tf / (tf + k1 * (1 - b + b * dl/avgdl)) where k1 is the term
+frequency saturation parameter and b controls the influence of document length.
+
+Setting k1 = 1.2 and b = 0.75 are the standard defaults used by Lucene and most
+search engines. Higher k1 gives more weight to repeated terms; k1 = 0 collapses
+BM25 to binary bag-of-words. Setting b = 0 disables length normalization
+entirely; b = 1 applies full normalization relative to the average document length.
+
+The IDF component is log((N - df + 0.5) / (df + 0.5) + 1) where N is the total
+number of documents and df is the document frequency of the term. Rare terms
+receive high IDF; terms appearing in every document approach zero.
+
+BM25 scores are not bounded: they depend on corpus statistics and query length.
+This incompatibility with cosine similarity scores — which are bounded between
+-1 and 1 — is why naive score merging between dense and sparse retrievers
+produces unreliable rankings. Rank-based fusion methods such as Reciprocal Rank
+Fusion avoid this problem entirely.

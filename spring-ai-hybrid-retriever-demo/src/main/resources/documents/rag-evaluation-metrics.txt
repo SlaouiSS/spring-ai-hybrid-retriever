@@ -1,0 +1,21 @@
+Evaluating retrieval-augmented generation systems requires measuring both
+retrieval quality and generation quality independently. Poor retrieval cannot
+be compensated by a stronger language model.
+
+Retrieval metrics measure whether the correct documents were retrieved.
+Precision@k is the fraction of the top-k results that are relevant. Recall@k
+measures what fraction of all relevant documents appear in the top-k results.
+NDCG (Normalised Discounted Cumulative Gain) accounts for position: a relevant
+document at rank 1 contributes more than the same document at rank 5.
+
+RAGAS (Retrieval Augmented Generation Assessment) is a framework that evaluates
+the full RAG pipeline without requiring ground-truth answers. It measures context
+precision (are retrieved passages relevant?), context recall (are all relevant
+passages retrieved?), faithfulness (does the answer stay within the retrieved
+context?), and answer relevancy (does the answer address the question?).
+
+Improving retrieval precision — returning fewer but more relevant documents —
+typically improves faithfulness and answer quality because the context window
+contains less noise. Hybrid retrieval that combines dense and sparse signals
+often achieves higher precision than either signal alone by promoting documents
+that satisfy multiple independent relevance criteria.

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.slaouiss</groupId>
+        <artifactId>spring-ai-hybrid-retriever</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>spring-ai-hybrid-retriever-demo</artifactId>
+
+    <name>Spring AI Hybrid Retriever — Demo</name>
+    <description>Runnable demo: dense (in-memory) + sparse (Lucene) hybrid retriever, manual wiring, no Docker required.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.slaouiss</groupId>
+            <artifactId>spring-ai-hybrid-retriever-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analysis-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-transformers</artifactId>
+            <exclusions>
+                <!-- pytorch-engine 0.32.0 auto-downloads PyTorch 2.5.1, which has no macOS x86_64 binary.
+                     onnxruntime-engine below serves as the DJL NDManager instead. -->
+                <exclusion>
+                    <groupId>ai.djl.pytorch</groupId>
+                    <artifactId>pytorch-engine</artifactId>
+                </exclusion>
+                <!-- tokenizers 0.32.0 drops osx-x86_64 native lib; overridden to 0.29.0 below. -->
+                <exclusion>
+                    <groupId>ai.djl.huggingface</groupId>
+                    <artifactId>tokenizers</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--
+          spring-ai-transformers declares pytorch-engine as its DJL NDManager provider, but
+          pytorch:2.5.1 (DJL 0.32.0) has no macOS x86_64 binary. onnxruntime-engine provides an
+          equivalent NDManager backed by onnxruntime:1.20.0, which ships natives for all five
+          supported platforms (linux-x64, linux-aarch64, osx-x64, osx-aarch64, win-x64) — no
+          runtime download required. All NDArray operations used by TransformersEmbeddingModel
+          (expandDims, broadcast, mul, sum, clip, div, toFloatArray, …) are satisfied through
+          NDArrayAdapter defaults and OrtNDArray.toByteBuffer(boolean).
+          MAINTENANCE: this version must match ai.djl:api pulled by spring-ai-transformers
+          (currently 0.32.0). A mismatch causes EngineProvider ClassNotFoundException at runtime.
+          Review this dependency whenever Spring AI upgrades its DJL version.
+        -->
+        <dependency>
+            <groupId>ai.djl.onnxruntime</groupId>
+            <artifactId>onnxruntime-engine</artifactId>
+            <version>0.32.0</version>
+        </dependency>
+        <!--
+          spring-ai-transformers:1.1.8 declares tokenizers:0.32.0, which dropped the osx-x86_64
+          native library. 0.29.0 is the last version that bundles it.
+          Binary compatibility with spring-ai-transformers:1.1.8 verified by bytecode inspection:
+          only getIds(), getAttentionMask(), getTypeIds(), and batchEncode(List) are called — all
+          present with identical signatures in 0.29.0. The DJL utility types used by the tokenizer
+          (NativeResource, Platform, PairList, Utils, Ec2Utils) are API-stable between api:0.29.0
+          and api:0.32.0.
+          MAINTENANCE: re-verify this pin on every Spring AI upgrade. If spring-ai-transformers
+          starts calling Encoding.toNDList(NDManager, boolean, boolean) or Encoding.getSequenceIds()
+          — both added in tokenizers:0.32.0 and absent in 0.29.0 — this override will cause a
+          NoSuchMethodError at runtime, not at compile time.
+        -->
+        <dependency>
+            <groupId>ai.djl.huggingface</groupId>
+            <artifactId>tokenizers</artifactId>
+            <version>0.29.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>io.github.slaouiss.springai.hybridretriever.demo.HybridRetrieverDemo</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

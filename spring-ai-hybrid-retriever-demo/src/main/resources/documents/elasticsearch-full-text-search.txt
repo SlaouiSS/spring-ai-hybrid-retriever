@@ -1,0 +1,18 @@
+Elasticsearch and OpenSearch index documents into shards using an inverted index.
+Each shard maintains a Lucene index internally. When a document is indexed, the
+analysis chain — tokenizer, token filters, character filters — produces terms
+that are stored in the inverted index alongside position and frequency data.
+
+BM25 is the default similarity algorithm in Elasticsearch since version 5.0,
+replacing TF-IDF. The practical_scoring_function applies BM25 at the field level
+and sums contributions across matched fields when a multi-field query is used.
+
+Elasticsearch's match query uses the same analyzer at query time as at index
+time, ensuring that the query term "Lucene" is tokenized the same way as the
+document term "Lucene". Full-text search relies on this consistency.
+
+The inverted index makes term lookup O(1): given a term, the index returns the
+posting list — the list of document IDs containing that term along with
+frequency and position data. BM25 scoring iterates over the posting list for each
+query term and accumulates the score. This is orders of magnitude faster than
+scanning every document for keyword presence.

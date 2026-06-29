@@ -1,0 +1,18 @@
+Retrieval-augmented generation improves language model responses by injecting
+relevant context at inference time. Instead of relying solely on the model's
+parametric knowledge, the system queries an external knowledge base and appends
+the retrieved passages to the prompt before asking the model to answer.
+
+This approach addresses the knowledge cutoff problem: a model trained up to a
+certain date cannot know about events that happened afterward. By retrieving fresh
+documents at query time, the system grounds its answers in up-to-date evidence
+rather than stale weights.
+
+The quality of the final answer depends entirely on retrieval quality. If the
+passages fed to the model are irrelevant, the answer degrades regardless of how
+capable the language model is. This is why the retrieval component deserves as
+much engineering attention as the generation component.
+
+Effective pipelines invest in retrieval diversity — combining semantic similarity
+with keyword overlap ensures that both conceptually related documents and
+exact-match documents are surfaced before the context window is assembled.

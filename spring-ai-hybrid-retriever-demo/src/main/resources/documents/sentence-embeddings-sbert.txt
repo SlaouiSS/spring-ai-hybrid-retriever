@@ -1,0 +1,20 @@
+Sentence-BERT (SBERT) adapts BERT for semantic sentence similarity by fine-tuning
+on sentence pairs with a siamese network structure. Each sentence is encoded
+independently by a shared BERT encoder, and the resulting representations are
+compared by cosine similarity.
+
+The bi-encoder architecture is what makes dense retrieval scalable: document
+embeddings are computed once at index time and stored. At query time only the
+query is encoded, and similarity is computed against all cached document vectors.
+This contrasts with cross-encoders, which process query and document jointly
+and cannot precompute representations.
+
+Mean pooling over the final layer's token embeddings typically outperforms using
+only the [CLS] token for sentence similarity tasks. The all-MiniLM-L6-v2 model
+uses mean pooling and produces 384-dimensional vectors trained specifically for
+semantic textual similarity.
+
+SBERT models are trained on large corpora of natural language inference and
+semantic textual similarity datasets. The training objective pushes semantically
+similar sentences close together in the embedding space and dissimilar ones apart,
+measured by cosine distance.

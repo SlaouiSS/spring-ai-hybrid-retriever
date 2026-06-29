@@ -1,5 +1,7 @@
 # Spring AI Hybrid Retriever
 
+[![CI](https://github.com/slaouiss/spring-ai-hybrid-retriever/actions/workflows/ci.yml/badge.svg)](https://github.com/slaouiss/spring-ai-hybrid-retriever/actions/workflows/ci.yml)
+
 A composable hybrid `DocumentRetriever` for Spring AI — combine dense and sparse retrievers
 into a single, reusable one, with Reciprocal Rank Fusion.
 
@@ -13,7 +15,7 @@ library fills that gap.
 - [How it works](#how-it-works)
 - [Using it with `RetrievalAugmentationAdvisor`](#using-it-with-retrievalaugmentationadvisor)
 - [Configuration & extension points](#configuration--extension-points)
-- [Spring Boot auto-configuration](#spring-boot-auto-configuration)
+- [Performance](#performance)
 - [Why not native hybrid search?](#why-not-native-hybrid-search)
 - [Scope and non-goals](#scope-and-non-goals-v1)
 - [Requirements](#requirements)
@@ -47,25 +49,15 @@ List<Document> merged = /* fuse + dedup by hand */;
 
 ## Installation
 
-Add the starter (Spring Boot auto-configuration) or the core module (no Spring Boot dependency).
-
 ```xml
-<!-- Spring Boot apps: auto-configuration included -->
-<dependency>
-    <groupId>io.github.slaouiss</groupId>
-    <artifactId>spring-ai-hybrid-retriever-spring-boot-starter</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-```xml
-<!-- Or core only, framework-agnostic -->
 <dependency>
     <groupId>io.github.slaouiss</groupId>
     <artifactId>spring-ai-hybrid-retriever-core</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```
+
+V1 ships the core library only. A Spring Boot starter with auto-configuration is planned for a future release.
 
 ---
 
@@ -89,7 +81,7 @@ DocumentRetriever sparse = new MyLuceneDocumentRetriever(luceneIndex, 20);
 DocumentRetriever hybrid = HybridDocumentRetriever.builder()
         .dense(dense)
         .sparse(sparse)
-        .topK(10)            // number of fused results to return
+        .topK(10)            // defaults to 10; omit to use the default
         .build();            // Reciprocal Rank Fusion is the default joiner
 
 List<Document> results = hybrid.retrieve(new Query("how do I rotate my API keys?"));
@@ -103,17 +95,17 @@ defaults; both are configurable (see below).
 ## How it works
 
 ```
-                         Query
-                           │
-                 HybridDocumentRetriever
-                  /                      \
-        DocumentRetriever          DocumentRetriever
-            (dense)                    (sparse)
-                  \                      /
-                   RRFDocumentJoiner
-                  (+ DocumentIdentityStrategy)
-                           │
-                     List<Document>   (ranked, top-K)
+                 Query
+                   │
+         HybridDocumentRetriever
+          /                      \
+DocumentRetriever          DocumentRetriever
+    (dense)                    (sparse)
+          \                      /
+           RRFDocumentJoiner
+          (+ DocumentIdentityStrategy)
+                   │
+             List<Document>   (ranked, top-K)
 ```
 
 1. Run the dense and the sparse retriever.
@@ -124,7 +116,7 @@ defaults; both are configurable (see below).
 3. **Documents that appear in *both* lists have their contributions summed** — via a
    `DocumentIdentityStrategy` (by id, by default). That overlap is where fusion adds value, and it
    is exactly what the built-in `ConcatenationDocumentJoiner` discards.
-4. Sort, truncate to `topK`.
+4. Sort by RRF score, truncate to `topK`.
 
 ---
 
@@ -151,12 +143,21 @@ String answer = chatClient.prompt()
 
 Everything beyond the defaults is an explicit, replaceable component:
 
-| Concern | Default | How to change |
-|---|---|---|
-| Fusion algorithm | `RRFDocumentJoiner` (k = 60) | `.joiner(new RRFDocumentJoiner(50))`, or any `DocumentJoiner` |
-| RRF constant `k` | 60 | constructor argument of `RRFDocumentJoiner` |
-| Fused result count | 10 | `.topK(n)` |
-| Document identity | `ByIdDocumentIdentityStrategy` (`document.getId()`) | pass a `DocumentIdentityStrategy` to the joiner |
+|      Concern       |                       Default                       |                         How to change                         |
+|--------------------|-----------------------------------------------------|---------------------------------------------------------------|
+| Fusion algorithm   | `RRFDocumentJoiner` (k = 60)                        | `.joiner(new RRFDocumentJoiner(50))`, or any `DocumentJoiner` |
+| RRF constant `k`   | 60                                                  | `new RRFDocumentJoiner(50)`                                   |
+| Fused result count | 10                                                  | `.topK(n)`                                                    |
+| Document identity  | `ByIdDocumentIdentityStrategy` (`document.getId()`) | pass a `DocumentIdentityStrategy` to the joiner               |
+
+`RRFDocumentJoiner` constructors, from simplest to most explicit:
+
+```java
+new RRFDocumentJoiner()                            // k=60, identity by id
+new RRFDocumentJoiner(50)                          // custom k, identity by id
+new RRFDocumentJoiner(byBusinessKey)               // k=60, custom identity
+new RRFDocumentJoiner(50, byBusinessKey)           // custom k and identity
+```
 
 ```java
 // Custom identity: merge documents that share a business key across sources.
@@ -176,19 +177,24 @@ DocumentRetriever hybrid = HybridDocumentRetriever.builder()
 
 ---
 
-## Spring Boot auto-configuration
+## Performance
 
-With the starter on the classpath, a `HybridDocumentRetriever` bean is auto-configured when a
-dense retriever and a sparse retriever are available. It backs off (`@ConditionalOnMissingBean`)
-if you define your own.
+The benchmark module measures the overhead introduced by `HybridDocumentRetriever` and
+`RRFDocumentJoiner` themselves — fusion and orchestration only. Both retrievers are replaced with
+stubs that return pre-built lists, so no vector search, BM25 query, embedding generation, or I/O
+is on the measurement path.
 
-```properties
-spring.ai.hybrid-retriever.rrf-k=60     # RRF smoothing constant (default 60)
-spring.ai.hybrid-retriever.top-k=10     # fused results returned (default 10)
+The measured execution time increases gradually with the candidate list size. For the candidate
+counts typical in practice, the fusion cost is negligible compared with the operations it composes.
+A single vector similarity search or BM25 query over a meaningful corpus typically takes
+milliseconds; RRF fusion over the same result sets takes microseconds.
+
+To run the benchmarks:
+
+```shell
+mvn package -pl spring-ai-hybrid-retriever-benchmark -am
+java -jar spring-ai-hybrid-retriever-benchmark/target/benchmarks.jar
 ```
-
-The dense retriever can be auto-wired from a `VectorStore` bean. The sparse retriever is always
-supplied by you, since the library deliberately does not bind to any specific keyword engine.
 
 ---
 

@@ -1,0 +1,19 @@
+Approximate Nearest Neighbor (ANN) search trades exact recall for speed. Exact
+nearest-neighbour search requires comparing a query vector against every indexed
+vector, which is O(n) in the number of documents. ANN indexes reduce this to
+sub-linear time by pre-building a graph or cluster structure at index time.
+
+HNSW (Hierarchical Navigable Small World) constructs a multi-layer proximity
+graph. The top layers are sparse and allow long-range navigation; lower layers
+are dense and allow fine-grained local search. A query starts at the top layer,
+greedily descends toward the nearest node, and terminates in the base layer. The
+efSearch parameter controls how many candidates are explored per layer.
+
+IVF (Inverted File Index) partitions the embedding space into nlist Voronoi
+cells using k-means. A query finds the nprobe nearest cell centroids and searches
+only those cells. FAISS is the reference implementation of IVF, published by
+Meta AI. It supports several quantization strategies (PQ, SQ) to reduce memory.
+
+HNSW generally achieves higher recall than IVF at the same latency budget, but
+requires more memory because the graph structure is stored alongside the vectors.
+FAISS also implements HNSW and supports GPU acceleration for batch index builds.

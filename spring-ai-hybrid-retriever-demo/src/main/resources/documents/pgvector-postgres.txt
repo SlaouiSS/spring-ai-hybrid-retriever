@@ -1,0 +1,19 @@
+pgvector is a PostgreSQL extension that adds a vector data type and similarity
+search operators. It supports exact nearest-neighbour search using sequential
+scan, and approximate nearest-neighbour search using an IVFFlat or HNSW index.
+
+The IVFFlat index divides the embedding space into nlist clusters. A query
+probes nprobe clusters and returns the best results from those clusters. Higher
+nprobe increases recall at the cost of latency. The HNSW index in pgvector
+follows the same graph-navigation algorithm as standalone HNSW implementations
+and generally offers better recall-to-latency trade-offs than IVFFlat.
+
+pgvector stores embeddings in standard PostgreSQL tables. This means vector
+search can be combined with SQL filters, joins, and transactions in a single
+query — a significant operational advantage over managing a separate vector
+database. Full-text search via PostgreSQL's built-in tsvector and tsquery can
+run in the same query as the vector similarity search.
+
+Spring AI's PgVectorStore implements the VectorStore interface and wraps a
+pgvector-enabled PostgreSQL database. It is interchangeable with SimpleVectorStore
+in any code that depends on the VectorStore abstraction.

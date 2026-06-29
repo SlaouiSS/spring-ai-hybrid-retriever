@@ -1,0 +1,20 @@
+Spring AI ships a RetrievalAugmentationAdvisor that wires a DocumentRetriever
+into the chat model call chain. Because HybridDocumentRetriever implements
+DocumentRetriever, it plugs in with no code changes:
+
+  Advisor rag = RetrievalAugmentationAdvisor.builder()
+      .documentRetriever(hybridRetriever)
+      .build();
+
+The advisor retrieves documents at call time, injects them into the prompt, and
+forwards the augmented request to the chat model. The caller never interacts
+with the retrieval layer directly — the advisor encapsulates the pipeline.
+
+The modular design means the retrieval strategy is swappable: switching from a
+single VectorStoreDocumentRetriever to a HybridDocumentRetriever requires only
+changing the documentRetriever argument. The rest of the pipeline — advisor,
+ChatClient, prompt template — stays identical.
+
+This composability is the central value of Spring AI's DocumentRetriever SPI:
+retrieval components are interchangeable, and hybrid retrieval is just another
+implementation of the same interface.

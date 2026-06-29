@@ -1,0 +1,19 @@
+BERT (Bidirectional Encoder Representations from Transformers) is a pretrained
+language model based on the transformer encoder architecture. It uses multi-head
+self-attention to build contextual representations of tokens, processing the
+entire input sequence in parallel rather than left-to-right.
+
+Pretraining on masked language modelling and next-sentence prediction gives BERT
+general linguistic knowledge. Fine-tuning on downstream tasks then adapts those
+representations to specific applications without retraining from scratch.
+
+The transformer encoder stacks multiple attention layers. Each layer computes
+scaled dot-product attention: query, key, and value matrices derived from the
+input are used to weigh the contribution of every token to every other token's
+representation. Multi-head attention runs several such projections in parallel
+and concatenates their outputs.
+
+BERT tokenises input using WordPiece, splitting rare words into subword units
+to control vocabulary size. The [CLS] token's final representation is often
+used as a fixed-size sentence embedding, though mean pooling over all tokens
+generally produces better sentence-level similarity scores.

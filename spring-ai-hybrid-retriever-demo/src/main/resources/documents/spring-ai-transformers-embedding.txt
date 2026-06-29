@@ -1,0 +1,17 @@
+Spring AI ships TransformersEmbeddingModel, an EmbeddingModel implementation
+backed by ONNX Runtime and Deep Java Library. It runs the all-MiniLM-L6-v2
+sentence transformer model locally without an API key or external service.
+
+The model produces 384-dimensional dense vectors. Cosine similarity between
+query and document vectors drives the ranking inside SimpleVectorStore. Because
+the model runs in-process via ONNX Runtime, embedding generation is fully
+deterministic and reproducible across machines.
+
+TransformersEmbeddingModel is configured through setter injection. The tokenizer
+is bundled inside the spring-ai-transformers jar, so only the ONNX model binary
+needs to be downloaded on first use. Subsequent runs read from a local cache
+directory, making the demo fully offline after the initial setup.
+
+Spring AI's SimpleVectorStore stores the embedded documents in memory and
+exposes a VectorStore interface. VectorStoreDocumentRetriever wraps it and
+adapts it to the DocumentRetriever SPI used by the rest of the RAG pipeline.

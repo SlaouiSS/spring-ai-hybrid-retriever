@@ -1,0 +1,18 @@
+Vector databases store high-dimensional embeddings and support approximate nearest
+neighbour (ANN) search. Popular choices include pgvector for PostgreSQL, Qdrant,
+Weaviate, Pinecone, Milvus, and ChromaDB.
+
+Each system makes different trade-offs between query latency, index build time,
+memory usage, and recall accuracy. HNSW (Hierarchical Navigable Small World)
+graphs and IVF (Inverted File Index) are the most widely deployed ANN index
+structures. HNSW offers better recall at the cost of higher memory; IVF is more
+memory-efficient but requires a training phase.
+
+Choosing a vector database depends on deployment constraints. pgvector suits teams
+already running PostgreSQL who want to avoid a separate service. Qdrant and
+Weaviate provide native hybrid search that combines dense vector similarity with
+keyword filtering in a single query, which can eliminate the need for application-
+level fusion in homogeneous deployments.
+
+For heterogeneous stacks — dense index in one system, keyword index in another —
+application-level fusion with Reciprocal Rank Fusion is the standard approach.

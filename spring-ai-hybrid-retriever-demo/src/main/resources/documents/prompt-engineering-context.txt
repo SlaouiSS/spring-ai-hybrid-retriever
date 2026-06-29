@@ -1,0 +1,20 @@
+Prompt engineering shapes language model behaviour without changing model weights.
+A well-structured prompt includes a system message that constrains the response
+style, a context section containing retrieved passages, and the user's question.
+
+Few-shot examples embedded in the prompt demonstrate the expected output format.
+Chain-of-thought prompting asks the model to reason step by step before giving a
+final answer, which improves accuracy on multi-step problems. Both techniques
+rely on the model's in-context learning ability rather than fine-tuning.
+
+The context section is where retrieved documents are injected in a RAG system.
+Its placement relative to the question matters: models tend to attend more
+strongly to content at the beginning and end of the prompt (the primacy and
+recency effects). Placing the most relevant passage near the question improves
+answer faithfulness.
+
+Temperature controls the randomness of token sampling. Low temperature (0.1–0.3)
+produces more deterministic outputs suitable for factual question answering;
+high temperature (0.8–1.0) increases diversity and is better suited for creative
+generation. For a RAG system grounded in retrieved evidence, low temperature is
+generally preferred.

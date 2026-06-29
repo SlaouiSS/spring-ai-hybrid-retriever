@@ -1,0 +1,20 @@
+Dense retrieval encodes queries and documents as continuous vectors in a shared
+embedding space. Semantic similarity is measured by cosine distance: documents
+that are conceptually related to the query score highly even if they share no
+exact terms. This handles synonyms, paraphrasing, and language variation well.
+
+Sparse retrieval, typically BM25 over an inverted index, excels at exact keyword
+matching. A query containing a specific product code, acronym, or technical term
+reliably surfaces documents containing that exact string, independently of
+semantic similarity. Sparse methods degrade on paraphrase but dominate on
+vocabulary mismatch in the query's favour.
+
+Hybrid retrieval combines both signals. Reciprocal Rank Fusion assigns each
+document a score of 1 / (k + rank) for every ranked list it appears in, then
+sums those scores. Documents that rank well in dense search and in sparse search
+accumulate higher combined scores than documents strong in only one list.
+
+The practical gain is coverage: dense retrieval catches semantically similar
+documents that sparse misses; sparse retrieval catches exact-match documents that
+dense misses. RRF merges both without requiring score normalisation, because it
+operates on ranks rather than raw similarity scores.

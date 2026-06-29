@@ -1,0 +1,19 @@
+Qdrant and Weaviate are purpose-built vector databases that use HNSW as their
+primary index structure. Both support payload (metadata) filtering applied
+during the graph traversal phase, which avoids the recall penalty of post-hoc
+filtering on results.
+
+Qdrant implements a modified HNSW variant with on-disk index support, making it
+suitable for datasets too large to fit in RAM. It exposes a gRPC and HTTP API,
+and supports sparse vector storage alongside dense vectors, enabling native
+hybrid search without application-level fusion.
+
+Weaviate introduces a concept-driven schema where objects belong to classes with
+typed properties. Its hybrid search combines BM25 over an inverted index with
+HNSW vector search using a fusion algorithm that blends both scores. The
+weighting between dense and sparse can be controlled via an alpha parameter.
+
+Both databases provide Spring AI VectorStore implementations. Switching from
+SimpleVectorStore to Qdrant or Weaviate requires only changing the VectorStore
+bean; the rest of the application code using VectorStoreDocumentRetriever or
+HybridDocumentRetriever remains unchanged.
