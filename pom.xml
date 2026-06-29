@@ -56,7 +56,7 @@
         <assertj.version>3.26.3</assertj.version>
         <mockito.version>5.14.2</mockito.version>
         <archunit.version>1.4.2</archunit.version>
-        <lucene.version>10.5.0</lucene.version>
+        <lucene.version>9.12.3</lucene.version>
         <jmh.version>1.37</jmh.version>
 
         <!-- Plugin versions -->
